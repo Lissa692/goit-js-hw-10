@@ -1,21 +1,19 @@
-import axios from 'axios';
-axios.defaults.headers.common['x-api-key'] =
-  'live_HUzEVidwIvLhShhwtMI9bb08FzPTDIN6EuR0p3pZt6zniEn3cffXfsYdiBfSxWfe';
-
 import { fetchBreeds } from './cat-api';
 import { fetchCatByBreed } from './cat-api';
+// import Notiflix from 'notiflix';
+import './style.css';
 
 const breedsSelect = document.querySelector('.breed-select');
 const catsList = document.querySelector('.cat-info');
 const loader = document.querySelector('.loader');
-const error = document.querySelector('.error');
+const errorText = document.querySelector('.error');
 breedsSelect.addEventListener('change', listBreedsCats);
 
 loader.classList.replace('loader', 'is-hidden');
-error.classList.add('is-hidden');
 catsList.classList.add('is-hidden');
+errorText.classList.add('is-hidden');
 
-function openValue(data) {
+function selectOptions(data) {
   return data
     .map(({ id, name }) => `<option value="${id}">${name}</option>`)
     .join('');
@@ -25,14 +23,16 @@ fetchBreeds()
   .then(response => {
     const breeds = response.data;
     console.log(breeds);
-    breedsSelect.innerHTML = openValue(breeds);
+    breedsSelect.innerHTML = selectOptions(breeds);
   })
   .catch(console.warn);
+// .catch(errorText.classList.remove('is-hidden'));
 
 function listBreedsCats(e) {
   loader.classList.replace('is-hidden', 'loader');
   breedsSelect.classList.add('is-hidden');
   catsList.classList.add('is-hidden');
+
   const breedId = e.currentTarget.value;
 
   fetchCatByBreed(breedId)
