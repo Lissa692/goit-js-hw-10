@@ -65,5 +65,7 @@ function hideLoader() {
 }
 
 function showError() {
-  Notiflix.Notify.failure('Error!');
+  Notiflix.Notify.failure(
+    'Oops! Something went wrong! Try reloading the page!'
+  );
 }
