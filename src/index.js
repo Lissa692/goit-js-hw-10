@@ -1,62 +1,69 @@
 import { fetchBreeds } from './cat-api';
 import { fetchCatByBreed } from './cat-api';
-// import Notiflix from 'notiflix';
-import './style.css';
+import Notiflix from 'notiflix';
 
-const breedsSelect = document.querySelector('.breed-select');
-const catsList = document.querySelector('.cat-info');
+// import './style.css';
+
+const select = document.querySelector('.breed-select');
 const loader = document.querySelector('.loader');
-const errorText = document.querySelector('.error');
-breedsSelect.addEventListener('change', listBreedsCats);
+const error = document.querySelector('.error');
+const catInfo = document.querySelector('.cat-info');
 
-loader.classList.replace('loader', 'is-hidden');
-catsList.classList.add('is-hidden');
-errorText.classList.add('is-hidden');
+function updateCatInfo(cat) {
+  catInfo.innerHTML = ''; // Очищити старі дані
 
-function selectOptions(data) {
-  return data
-    .map(({ id, name }) => `<option value="${id}">${name}</option>`)
-    .join('');
+  const catInfoDiv = document.createElement('div');
+  catInfoDiv.innerHTML = `
+  <h3>${cat.breeds[0].name}</h3>
+  <p><strong>Description:</strong> ${cat.breeds[0].description}</p>
+  <p><strong>Temperament:</strong> ${cat.breeds[0].temperament}</p>
+  <img src="${cat.url}" alt="${cat.breeds[0].name}" width="500" >
+  `;
+  catInfo.appendChild(catInfoDiv); // Додати нову інформацію
 }
 
-fetchBreeds()
-  .then(response => {
-    const breeds = response.data;
-    console.log(breeds);
-    breedsSelect.innerHTML = selectOptions(breeds);
-  })
-  .catch(console.warn);
-// .catch(errorText.classList.remove('is-hidden'));
+function init() {
+  showLoader();
 
-function listBreedsCats(e) {
-  loader.classList.replace('is-hidden', 'loader');
-  breedsSelect.classList.add('is-hidden');
-  catsList.classList.add('is-hidden');
-
-  const breedId = e.currentTarget.value;
-
-  fetchCatByBreed(breedId)
-    .then(data => {
-      loader.classList.replace('loader', 'is-hidden');
-      breedsSelect.classList.remove('is-hidden');
-      const { url, breeds } = data[0];
-      catsList.innerHTML = `<div class="box-img"><img src="${url}" alt="${breeds[0].name}" width="400"/></div><div class="box"><h1>${breeds[0].name}</h1><p>${breeds[0].description}</p><p><b>Temperament:</b> ${breeds[0].temperament}</p></div>`;
+  fetchBreeds()
+    .then(breeds => {
+      breeds.forEach(breed => {
+        const option = document.createElement('option');
+        option.value = breed.id;
+        option.textContent = breed.name;
+        select.appendChild(option);
+      });
     })
-    .catch(console.warn);
+    .catch(() => showError())
+    .finally(hideLoader);
+
+  select.addEventListener('change', e => {
+    const breedId = e.target.value;
+
+    catInfo.innerHTML = ''; // Очистити блок перед запитом
+
+    showLoader();
+
+    fetchCatByBreed(breedId)
+      .then(cat => {
+        updateCatInfo(cat);
+      })
+      .catch(() => showError())
+      .finally(hideLoader);
+  });
 }
 
-// const breedSelectEl = document.querySelector('.breed-select');
-// const catInfo = document.querySelector('.cat-info');
+init();
+// Функції оновлення інтерфейсу
 
-// function selectOptions(data) {
-//   return data
-//     .map(({ name, id }) => `<option value=${id} >${name}</option> `)
-//     .join('');
-// }
-// fetchBreeds()
-//   .then(response => {
-//     const breeds = response.data;
-//     console.log(breeds);
-//     breedSelectEl.innerHTML = selectOptions(breeds);
-//   })
-//   .cath(console.warn());
+function showLoader() {
+  Notiflix.Loading.pulse();
+}
+
+function hideLoader() {
+  Notiflix.Loading.remove();
+}
+
+function showError() {
+  Notiflix.Notify.failure('Error!');
+}
